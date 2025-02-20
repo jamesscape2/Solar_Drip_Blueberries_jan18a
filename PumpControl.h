@@ -5,7 +5,21 @@
 #include "GlobalVariables.h"
 #include "RTCSetup.h"
 #include "Debug.h"
-//#include "LEDControl.h"
+
+// Helper function to parse schedule times from the comma-separated string
+void parseScheduleTimes(String times[], int &count) {
+  int currentIndex = 0;
+  int commaIndex;
+
+  while ((commaIndex = scheduleTimes.indexOf(',', currentIndex)) != -1 && count < scheduleCount) {
+    times[count++] = scheduleTimes.substring(currentIndex, commaIndex);
+    currentIndex = commaIndex + 1;
+  }
+
+  if (count < scheduleCount && currentIndex < scheduleTimes.length()) {
+    times[count++] = scheduleTimes.substring(currentIndex);
+  }
+}
 
 void setupPumpControl() {
   pinMode(PUMP_PIN, OUTPUT);
@@ -16,7 +30,6 @@ void setupPumpControl() {
 void activatePump() {
   debugMessage("Pump activated.", INFO);
   digitalWrite(PUMP_PIN, HIGH);
-  //displayPumpOnSymbol();
   pumpStartTime = millis();
   pumpActive = true;
 }
@@ -24,32 +37,27 @@ void activatePump() {
 void stopPump() {
   debugMessage("Pump deactivated.", INFO);
   digitalWrite(PUMP_PIN, LOW);
-  //displayPumpOffSymbol();
   pumpActive = false;
 }
 
-void controlPump() {
-  if (pumpActive && (millis() - pumpStartTime >= pumpDuration)) {
-    stopPump();
-  }
-}
-
 void checkAndRunScheduledPump() {
-  String currentTime = getCurrentTime();
-  String currentHourMinute = currentTime.substring(0, 5);
+  String currentTime = getCurrentTime().substring(0, 5);
+  String parsedTimes[10]; // Temporary array to store parsed times
+  int count = 0;
 
-  for (String scheduledTime : scheduledTimes) {
-    if (currentHourMinute == scheduledTime) {
-      if (!rtcScheduledPumpActive && !pumpActive) {
-        debugMessage("Starting pump for scheduled cycle.", INFO);
-        monitorWaterLevel();
-        if (waterLow) {
-          stopPump();
-          debugNotification("Water Low, Cycle Stopped");
-          debugMessage("Water Low, Cycle Stopped", INFO);
-        } else {
-          activatePump();
-        }
+  // Parse the schedule times from the CloudString
+  parseScheduleTimes(parsedTimes, count);
+
+  for (int i = 0; i < count; i++) {
+    if (currentTime == parsedTimes[i] && !rtcScheduledPumpActive && !pumpActive) {
+      debugMessage("Starting scheduled pump cycle.", INFO);
+
+      if (waterLow) {
+        stopPump();
+        debugNotification("Water Low, Cycle Stopped.");
+      } else {
+        pumpDuration = runtimeDuration; // Use IoT Cloud-configured runtime
+        activatePump();
         rtcScheduledPumpActive = true;
       }
     }

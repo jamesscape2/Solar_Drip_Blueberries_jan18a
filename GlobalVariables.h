@@ -4,28 +4,34 @@
 #include <Arduino.h>
 #include <ArduinoIoTCloud.h>
 #include <Arduino_ConnectionHandler.h>
+#include "Config.h"
 
+// Wi-Fi credentials
 extern const char *ssid;
 extern const char *password;
+
+// IoT Cloud connection
 extern WiFiConnectionHandler ArduinoIoTPreferredConnection;
 
-#define WATER_SENSOR_PIN 2
-#define PUMP_PIN 5
-#define SWITCH_PIN_PUMP 6
-#define SWITCH_PIN_PROGRAMPAUSE 7
-
+// Pump and water level states
 extern bool waterLow;
 extern unsigned long pumpDuration;
 extern unsigned long pumpStartTime;
 extern bool pumpActive;
+
+// Pause states
 extern bool pauseLoop;
 extern bool dipPauseLoop;
 extern bool dipPumpControl;
-extern bool rtcScheduledPumpActive; // Add this declaration
 
+// IoT Cloud properties
 extern CloudSwitch pumpControl;
 extern CloudString notification;
+extern CloudString scheduleTimes; // Comma-separated schedule times
+extern CloudInt scheduleCount;    // Number of active schedule times
+extern CloudTime runtimeDuration; // Editable runtime duration in milliseconds
 
-extern String scheduledTimes[4]; // Declare explicitly
+// Runtime control
+extern bool rtcScheduledPumpActive;
 
 #endif

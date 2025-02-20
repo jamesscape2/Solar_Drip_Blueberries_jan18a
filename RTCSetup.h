@@ -22,18 +22,9 @@ void setupRTC() {
   debugMessage("RTC synchronized via NTP: " + timeClient.getFormattedTime(), INFO);
 }
 
-void updateRTC() {
-  if (!timeClient.update()) {
-    debugMessage("Failed to update RTC from NTP.", INFO);
-  }
-}
-
 String getCurrentTime() {
-  String currentTime = timeClient.getFormattedTime();
-  if (currentTime == "") {
-    debugMessage("RTC error: No valid time data available.", INFO);
-  }
-  return currentTime;
+  if (!timeClient.update()) debugMessage("RTC update failed.", DEBUG);
+  return timeClient.getFormattedTime();
 }
 
 #endif

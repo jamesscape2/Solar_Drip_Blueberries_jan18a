@@ -3,42 +3,30 @@
 
 #include <Arduino.h>
 #include "GlobalVariables.h"
-#include "PumpControl.h"
 #include "Debug.h"
-
-void onSwitchPump();
-void onSwitchPause();
-
-volatile bool dipPumpStateChanged = false;
-volatile bool dipPauseStateChanged = false;
 
 void setupDIPSwitchHandler() {
   pinMode(SWITCH_PIN_PUMP, INPUT_PULLUP);
   pinMode(SWITCH_PIN_PROGRAMPAUSE, INPUT_PULLUP);
-
-  attachInterrupt(digitalPinToInterrupt(SWITCH_PIN_PUMP), onSwitchPump, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(SWITCH_PIN_PROGRAMPAUSE), onSwitchPause, CHANGE);
-}
-
-void onSwitchPump() {
-  dipPumpStateChanged = true;
-}
-
-void onSwitchPause() {
-  dipPauseStateChanged = true;
+  debugMessage("DIP Switches Initialized.", INFO);
 }
 
 void handleSwitch() {
-  if (dipPumpStateChanged) {
-    dipPumpControl = !digitalRead(SWITCH_PIN_PUMP);
-    debugNotification(dipPumpControl ? "DIP Switch Pump Activated" : "DIP Switch Pump Deactivated");
-    dipPumpStateChanged = false;
+  static bool lastPumpState = HIGH, lastPauseState = HIGH;
+
+  bool currentPumpState = digitalRead(SWITCH_PIN_PUMP);
+  bool currentPauseState = digitalRead(SWITCH_PIN_PROGRAMPAUSE);
+
+  if (currentPumpState != lastPumpState) {
+    lastPumpState = currentPumpState;
+    dipPumpControl = (currentPumpState == LOW);
+    debugNotification(dipPumpControl ? "Pump Switch ON" : "Pump Switch OFF");
   }
 
-  if (dipPauseStateChanged) {
-    dipPauseLoop = !digitalRead(SWITCH_PIN_PROGRAMPAUSE);
-    debugNotification(dipPauseLoop ? "DIP Switch Pause Activated" : "DIP Switch Pause Deactivated");
-    dipPauseStateChanged = false;
+  if (currentPauseState != lastPauseState) {
+    lastPauseState = currentPauseState;
+    dipPauseLoop = (currentPauseState == LOW);
+    debugNotification(dipPauseLoop ? "Pause Switch ON" : "Pause Switch OFF");
   }
 }
 

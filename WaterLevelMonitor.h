@@ -10,39 +10,19 @@ void setupWaterLevelMonitor() {
 }
 
 void monitorWaterLevel() {
-  static unsigned long lastDebounceTime = 0;
-  const unsigned long debounceDelay = 100;
+  static bool lastState = HIGH;
+  bool currentState = digitalRead(WATER_SENSOR_PIN);
 
-  static bool lastWaterSensorState = HIGH;
-  bool currentWaterSensorState = digitalRead(WATER_SENSOR_PIN);
+  if (currentState != lastState) {
+    delay(50); // Debounce
+    if (currentState == digitalRead(WATER_SENSOR_PIN)) {
+      lastState = currentState;
+      waterLow = (currentState == LOW);
 
-  if (currentWaterSensorState != lastWaterSensorState) {
-    lastDebounceTime = millis();
-  }
-
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    if (currentWaterSensorState != waterLow) {
-      waterLow = !currentWaterSensorState;
-
-      if (!waterLow) {
-        if (timeClient.update()) {
-          debugNotification("Water level is good at " + timeClient.getFormattedTime());
-        } else {
-          debugNotification("Water level is good. Time unavailable.");
-        }
-        debugMessage("Water level is good.", INFO);
-      } else {
-        if (timeClient.update()) {
-          debugNotification("Water level is low! Pump control disabled at " + timeClient.getFormattedTime());
-        } else {
-          debugNotification("Water level is low! Pump control disabled. Time unavailable.");
-        }
-        debugMessage("Water level is low!", INFO);
-      }
+      String time = getCurrentTime();
+      debugNotification(waterLow ? "Water level is low! " + time : "Water level is good! " + time);
     }
   }
-
-  lastWaterSensorState = currentWaterSensorState;
 }
 
 #endif

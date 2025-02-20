@@ -1,0 +1,4 @@
+#define WATER_SENSOR_PIN 6
+#define PUMP_PIN 5
+#define SWITCH_PIN_PUMP 2
+#define SWITCH_PIN_PROGRAMPAUSE 3
